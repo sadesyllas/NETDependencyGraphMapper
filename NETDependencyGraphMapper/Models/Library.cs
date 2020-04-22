@@ -9,7 +9,9 @@ namespace NETDependencyGraphMapper.Models
             Version = version;
         }
 
-        public override string GraphId => $"Library::{Name}";
+        public override string GraphId => $"Library::{base.Name}::{Version}";
+
+        public override string Name => $"{base.Name}\nVersion: {Version}";
 
         public string Version { get; }
     }

@@ -65,7 +65,10 @@ namespace NETDependencyGraphMapper
             // var colorAttribute = new GraphEntityData("color", ElementType.Node, "color", DataType.String,
             //     NodeColor.Blue.Serialize());
 
-            var nodeGraphicsAttribute = new yEdGraphEntityData("color", ElementType.Node, yEdDataType.NodeGraphics);
+            var nodeGraphicsAttribute =
+                new yEdGraphEntityData("node-color", ElementType.Node, yEdDataType.NodeGraphics);
+            var edgeGraphicsAttribute =
+                new yEdGraphEntityData("edge-color", ElementType.Node, yEdDataType.EdgeGraphics);
 
             foreach (var solution in solutions)
             {
@@ -77,7 +80,7 @@ namespace NETDependencyGraphMapper
                     {
                         Color = NodeColor.LawnGreen,
                         Label = solution.Name
-                    }),
+                    })
                 };
 
                 nodes.Add(new Node(solution, solutionNodeAttributes));
@@ -115,6 +118,7 @@ namespace NETDependencyGraphMapper
                         edges.Add(new Edge(project, subProject));
                     }
 
+                    // TODO: /home/bellerophon/graphml_linecolor.txt
                     foreach (var library in project.ReferencedLibraries)
                     {
                         var libraryNodeAttributes = new[]
@@ -136,7 +140,7 @@ namespace NETDependencyGraphMapper
 
             var graphs = solutions.Select(solution => new Graph(solution.Name, nodes, edges));
             // var graphEnvelope = new GraphEnvelope(graphs, new[] {nameAttribute, colorAttribute});
-            var graphEnvelope = new GraphEnvelope(graphs, new[] {nodeGraphicsAttribute});
+            var graphEnvelope = new GraphEnvelope(graphs, new[] {nodeGraphicsAttribute, edgeGraphicsAttribute});
 
             using var memoryStream = new MemoryStream();
             using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings

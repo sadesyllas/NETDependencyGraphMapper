@@ -3,7 +3,8 @@ namespace NETDependencyGraphMapper.Models.yEd
     // ReSharper disable once InconsistentNaming
     public enum yEdDataType : byte
     {
-        NodeGraphics
+        NodeGraphics,
+        EdgeGraphics
     }
 
     // ReSharper disable once InconsistentNaming
