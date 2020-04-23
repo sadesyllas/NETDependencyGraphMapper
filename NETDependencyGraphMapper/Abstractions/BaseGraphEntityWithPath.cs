@@ -9,5 +9,7 @@ namespace NETDependencyGraphMapper.Abstractions
         }
 
         public override string Name => Path.GetFileNameWithoutExtension(NameOrPath);
+
+        public override string Description => Name;
     }
 }

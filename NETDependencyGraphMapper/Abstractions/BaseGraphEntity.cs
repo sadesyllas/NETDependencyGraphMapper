@@ -12,5 +12,7 @@ namespace NETDependencyGraphMapper.Abstractions
         public abstract string GraphId { get; }
 
         public abstract string Name { get; }
+
+        public abstract string Description { get; }
     }
 }

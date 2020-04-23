@@ -12,14 +12,16 @@ namespace NETDependencyGraphMapper.Models
     {
         private readonly IGraphEntity _sourceGraphEntity;
         private readonly IGraphEntity _targetGraphEntity;
+        private readonly bool? _directed;
         private readonly IEnumerable<IGraphSerializable> _attributes;
 
         public Edge([NotNull] IGraphEntity sourceGraphEntity, [NotNull] IGraphEntity targetGraphEntity,
-            IEnumerable<IGraphSerializable>? attributes = null)
+            bool? directed = null, IEnumerable<IGraphSerializable>? attributes = null)
             : base($"{sourceGraphEntity.GraphId}::{targetGraphEntity.GraphId}")
         {
             _sourceGraphEntity = sourceGraphEntity;
             _targetGraphEntity = targetGraphEntity;
+            _directed = directed;
             _attributes = attributes ?? new IGraphSerializable[0];
         }
 
@@ -28,6 +30,11 @@ namespace NETDependencyGraphMapper.Models
             xmlWriter.WriteStartElement("edge");
             xmlWriter.WriteAttributeString("source", _sourceGraphEntity.GraphId);
             xmlWriter.WriteAttributeString("target", _targetGraphEntity.GraphId);
+
+            if (_directed.HasValue)
+            {
+                xmlWriter.WriteAttributeString("directed", _directed.Value ? "true" : "false");
+            }
 
             // write attributes
             foreach (var attribute in _attributes)

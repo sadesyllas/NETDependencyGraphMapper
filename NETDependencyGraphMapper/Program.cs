@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using NETDependencyGraphMapper.Abstractions;
 using NETDependencyGraphMapper.Models;
 using NETDependencyGraphMapper.Models.yEd;
 using NETDependencyGraphMapper.Services;
@@ -60,6 +61,8 @@ namespace NETDependencyGraphMapper
             var solutions = new[] {solutionParser.Parse(solutionPaths.First().FullName)};
             var nodes = new HashSet<Node>();
             var edges = new HashSet<Edge>();
+            var libraries = new Dictionary<string, HashSet<IGraphEntity>>();
+
             // var nameAttribute = new GraphEntityData("name", ElementType.Node, "name", DataType.String);
             //
             // var colorAttribute = new GraphEntityData("color", ElementType.Node, "color", DataType.String,
@@ -74,12 +77,12 @@ namespace NETDependencyGraphMapper
             {
                 var solutionNodeAttributes = new[]
                 {
-                    // new NodeData(nameAttribute, project.Name),
+                    // new NodeData(nameAttribute, project.Description),
                     // new NodeData(colorAttribute, NodeColor.Green.Serialize())
                     new yEdNodeGraphicsData(nodeGraphicsAttribute, new yEdNodeGraphicsConfiguration
                     {
                         Color = NodeColor.LawnGreen,
-                        Label = solution.Name
+                        Label = solution.Description
                     })
                 };
 
@@ -89,12 +92,12 @@ namespace NETDependencyGraphMapper
                 {
                     var projectNodeAttributes = new[]
                     {
-                        // new NodeData(nameAttribute, project.Name),
+                        // new NodeData(nameAttribute, project.Description),
                         // new NodeData(colorAttribute, NodeColor.Green.Serialize())
                         new yEdNodeGraphicsData(nodeGraphicsAttribute, new yEdNodeGraphicsConfiguration
                         {
                             Color = NodeColor.DeepSkyBlue,
-                            Label = project.Name
+                            Label = project.Description
                         }),
                     };
 
@@ -105,12 +108,12 @@ namespace NETDependencyGraphMapper
                     {
                         var subProjectNodeAttributes = new[]
                         {
-                            // new NodeData(nameAttribute, project.Name),
+                            // new NodeData(nameAttribute, project.Description),
                             // new NodeData(colorAttribute, NodeColor.Green.Serialize())
                             new yEdNodeGraphicsData(nodeGraphicsAttribute, new yEdNodeGraphicsConfiguration
                             {
                                 Color = NodeColor.DeepSkyBlue,
-                                Label = subProject.Name
+                                Label = subProject.Description
                             }),
                         };
 
@@ -118,27 +121,75 @@ namespace NETDependencyGraphMapper
                         edges.Add(new Edge(project, subProject));
                     }
 
-                    // TODO: /home/bellerophon/graphml_linecolor.txt
                     foreach (var library in project.ReferencedLibraries)
                     {
                         var libraryNodeAttributes = new[]
                         {
-                            // new NodeData(nameAttribute, project.Name),
+                            // new NodeData(nameAttribute, project.Description),
                             // new NodeData(colorAttribute, NodeColor.Green.Serialize())
                             new yEdNodeGraphicsData(nodeGraphicsAttribute, new yEdNodeGraphicsConfiguration
                             {
                                 Color = NodeColor.Fuchsia,
-                                Label = library.Name
+                                Label = library.Description
                             }),
                         };
 
                         nodes.Add(new Node(library, libraryNodeAttributes));
                         edges.Add(new Edge(project, library));
+
+                        {
+                            if (libraries.TryGetValue(library.Name, out var hashSet))
+                            {
+                                hashSet.Add(library);
+                            }
+                            else
+                            {
+                                var newHashSet = new HashSet<IGraphEntity> {library};
+
+                                libraries.Add(library.Name, newHashSet);
+                            }
+                        }
                     }
                 }
             }
 
-            var graphs = solutions.Select(solution => new Graph(solution.Name, nodes, edges));
+            foreach (var (_, sameLibraryDifferentVersions) in libraries)
+            {
+                var sameLibraryDifferentVersionsArray = sameLibraryDifferentVersions.ToArray();
+
+                if (sameLibraryDifferentVersionsArray.Length == 1)
+                {
+                    continue;
+                }
+
+                var couples = new List<(IGraphEntity, IGraphEntity)>();
+
+                for (int i = 0; i < sameLibraryDifferentVersionsArray.Length; i++)
+                {
+                    for (int j = 0; j < sameLibraryDifferentVersionsArray.Length; j++)
+                    {
+                        couples.Add((sameLibraryDifferentVersionsArray[i], sameLibraryDifferentVersionsArray[j]));
+                    }
+                }
+
+                var interlibraryEdgeAttributes = new[]
+                {
+                    // new NodeData(nameAttribute, project.Description),
+                    // new NodeData(colorAttribute, NodeColor.Green.Serialize())
+                    new yEdEdgeGraphicsData(edgeGraphicsAttribute, new yEdEdgeGraphicsConfiguration
+                    {
+                        Color = NodeColor.Red,
+                        Width = 2.0f
+                    }),
+                };
+
+                foreach (var (library1, library2) in couples)
+                {
+                    edges.Add(new Edge(library1, library2, false, interlibraryEdgeAttributes));
+                }
+            }
+
+            var graphs = solutions.Select(solution => new Graph(solution.Description, nodes, edges));
             // var graphEnvelope = new GraphEnvelope(graphs, new[] {nameAttribute, colorAttribute});
             var graphEnvelope = new GraphEnvelope(graphs, new[] {nodeGraphicsAttribute, edgeGraphicsAttribute});
 

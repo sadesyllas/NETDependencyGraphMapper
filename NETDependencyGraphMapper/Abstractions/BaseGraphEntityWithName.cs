@@ -7,5 +7,7 @@ namespace NETDependencyGraphMapper.Abstractions
         }
 
         public override string Name => NameOrPath;
+
+        public override string Description => Name;
     }
 }
